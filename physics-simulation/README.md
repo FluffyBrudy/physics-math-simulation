@@ -1,0 +1,1 @@
+# this will progress as i further keep learing trigonometry. as much i learn i will try implementing physics
