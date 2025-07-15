@@ -9,34 +9,43 @@ class SineWave:
     def __init__(self) -> None:
         w, h = WIDTH // 2, HEIGHT // 2
 
+        self.staticsurf = pygame.Surface((w, h), pygame.SRCALPHA)
         self.surface = pygame.Surface((w, h), pygame.SRCALPHA)
 
         rect = pygame.Rect(0, 0, w - 10, h - 10)
-        self.plot_points = self.prerenderWave(self.surface)
+        self.plot_points = self.prerenderWave(self.staticsurf)
         self.pos = rect.midright
 
-        self.slider = Slider((self.surface.width-10, rect.centery + rect.height + 10), 360, 40, (0, len(self.plot_points)) )
+        self.slider = Slider(((WIDTH - 720) // 2 - 10, int(rect.centery * 1.5) + rect.height + 10), 720, 40, (0, len(self.plot_points)))
 
     def display(self, surface: pygame.Surface):
+        self.surface.fill((0, 0, 0, 0))
+        self.surface.blit(self.staticsurf, (0, 0))
+
+        wave_x, wave_y = self.plot_points[self.slider.get_value()]
+        gfxdraw.filled_circle(self.surface, int(wave_x), int(wave_y), DEFAULT_BORDER_RADIUS, FALLBACK_COLOR)
+
         surface.blit(self.surface, self.pos)
         self.slider.display(surface)
 
-    def handle_event(self,event: pygame.Event):
+    def handle_event(self, event: pygame.Event):
         self.slider.update(event)
+
 
     @staticmethod
     def prerenderWave(surface: pygame.Surface):
         w, h = surface.get_size()
-        x = np.linspace(0, 4 * np.pi, 500)  
+        x = np.linspace(0, 4 * np.pi, 720)  
         y = np.sin(x)
 
         pad_ratio = 0.85
+        margin = (1 - pad_ratio) * w // 2
 
         padded_width = int(w * pad_ratio)
         padded_height = int(h * pad_ratio)
 
-        x_pixels = (x - x.min()) / (x.max() - x.min()) * padded_width
-        y_pixels = (1 - (y - y.min()) / (y.max() - y.min())) * padded_height
+        x_pixels = margin + (x - x.min()) / (x.max() - x.min()) * padded_width
+        y_pixels = margin + (1 - (y - y.min()) / (y.max() - y.min())) * padded_height
 
         plot_points = list(zip(x_pixels, y_pixels))
         gfxdraw.aapolygon(surface, plot_points, WHITE)
