@@ -1,8 +1,7 @@
 import pygame
 import sys
-import constatnts as c
+import constants as c
 from sinewave import SineWave
-
 
 pygame.init()
 
@@ -13,15 +12,15 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.waveSurf = SineWave((100, c.HEIGHT//2))
+        self.waveSurf = SineWave()
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-
-    def update(self):
-        pass
+            if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION):
+                self.waveSurf.handle_event(event)
+ 
 
     def draw(self):
         self.screen.fill(c.BLACK)
@@ -31,7 +30,6 @@ class Game:
     def run(self):
         while self.running:
             self.handle_events()
-            self.update()
             self.draw()
             self.clock.tick(c.FPS)
 
