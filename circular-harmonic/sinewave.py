@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import pygame
 import pygame.gfxdraw as gfxdraw
@@ -16,7 +17,11 @@ class SineWave:
         self.plot_points = self.prerenderWave(self.staticsurf)
         self.pos = rect.midright
 
-        self.slider = Slider(((WIDTH - 720) // 2 - 10, int(rect.centery * 1.5) + rect.height + 10), 720, 40, (0, len(self.plot_points)))
+        slider_width = len(self.plot_points)
+        self.slider = Slider(
+            pos=((WIDTH - slider_width) // 2 - 10, HEIGHT),
+            width=slider_width, height=40, 
+        )
 
     def display(self, surface: pygame.Surface):
         self.surface.fill((0, 0, 0, 0))
@@ -28,14 +33,20 @@ class SineWave:
         surface.blit(self.surface, self.pos)
         self.slider.display(surface)
 
-    def handle_event(self, event: pygame.Event):
-        self.slider.update(event)
+    def update(self):
+        self.slider.update()
 
+    def get_current_angle(self):
+        return self.slider.get_value()
+
+    def get_container_pos(self):
+        return self.pos
 
     @staticmethod
     def prerenderWave(surface: pygame.Surface):
         w, h = surface.get_size()
-        x = np.linspace(0, 4 * np.pi, 720)  
+        x = np.linspace(0, 4 * np.pi, 721, endpoint=True)
+        print(len(x))
         y = np.sin(x)
 
         pad_ratio = 0.85
@@ -55,26 +66,40 @@ class SineWave:
 
 
 class Slider:
-    def __init__(self, pos: tuple[int, int], width: int, height: int, value_range: tuple[int, int], **kwargs):
-        self.rect = pygame.Rect(*pos, width+height//4, int(height * 0.5))
-        self.color = kwargs.get("color", FALLBACK_COLOR)
+    def __init__(self, pos: tuple[int, int], width: int, height: int, **kwargs):
+        pointer_size = height // 3
+
+        self.default_color = kwargs.get("color", FALLBACK_COLOR)
+        self.hover_color = RED
+
+        self.rect = pygame.Rect(*pos, width, int(height * 0.5))
+        self.rect.bottom = pos[1] - (pointer_size // 2)
+        self.color = self.default_color
         self.border_width = kwargs.get("border_width", DEFAULT_BORDER_WIDTH)
         self.border_radius = kwargs.get("border_radius", DEFAULT_BORDER_RADIUS)
-
-        pointer_size = height // 4
         self.slider_rect = pygame.Rect(pos, (pointer_size, pointer_size))
-        self.slider_range = value_range
-        self.lvalue = self.rect.left
-        self.rvalue = self.rect.right-1
+
+        self.shallow_rect = self.rect.copy() # this is related with self.rect
+        self.shallow_rect.width += self.slider_rect.width
 
     def display(self, surface: pygame.Surface):
         pygame.draw.circle(surface, self.color, (self.slider_rect.centerx, self.rect.centery), self.slider_rect.height)
-        pygame.draw.rect(surface, self.color, self.rect, self.border_width, self.border_radius)
+        pygame.draw.rect(surface, self.color, self.shallow_rect, self.border_width, self.border_radius)
 
-    def update(self, event:pygame.Event):
-        pos = event.pos
-        if pygame.mouse.get_pressed()[0]:
-            self.slider_rect.x = max(self.lvalue, min(pos[0],self.rvalue-self.slider_rect.height))
+    def update(self):
+        pressed = pygame.mouse.get_pressed()[0]
+        if pressed:
+            pos = pygame.mouse.get_pos()
+            self.slider_rect.x = max(self.rect.left, min(pos[0],self.rect.right-1))
+        self.handle_state_indication(pressed)
+
+    def handle_state_indication(self, is_pressed: bool):
+        if is_pressed:
+            if self.color != self.hover_color:
+                self.color = self.hover_color
+        elif self.color != self.default_color:
+            self.color = self.default_color
 
     def get_value(self):
-        return self.slider_rect.x - self.lvalue
+        print(self.slider_rect.x-self.rect.left)
+        return self.slider_rect.x - self.rect.left
