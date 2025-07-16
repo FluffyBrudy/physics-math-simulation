@@ -82,16 +82,22 @@ class Slider:
         self.shallow_rect = self.rect.copy() # this is related with self.rect
         self.shallow_rect.width += self.slider_rect.width
 
+        self.released = True
+
     def display(self, surface: pygame.Surface):
         pygame.draw.circle(surface, self.color, (self.slider_rect.centerx, self.rect.centery), self.slider_rect.height)
         pygame.draw.rect(surface, self.color, self.shallow_rect, self.border_width, self.border_radius)
 
     def update(self):
         pressed = pygame.mouse.get_pressed()[0]
-        if pressed:
+        not_released_or_collided = (not self.released or self.rect.collidepoint(pygame.mouse.get_pos()))
+        if pressed and not_released_or_collided:
+            self.released = False
             pos = pygame.mouse.get_pos()
             self.slider_rect.x = max(self.rect.left, min(pos[0],self.rect.right-1))
-        self.handle_state_indication(pressed)
+        elif not pressed:
+            self.released = True
+        self.handle_state_indication(pressed and not_released_or_collided)
 
     def handle_state_indication(self, is_pressed: bool):
         if is_pressed:
