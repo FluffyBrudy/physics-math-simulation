@@ -1,5 +1,3 @@
-
-
 from math import sin, cos, radians
 from pygame import Surface, gfxdraw
 import pygame

@@ -1,7 +1,6 @@
 import numpy as np
 import pygame
 import pygame.gfxdraw as gfxdraw
-
 from constants import DEFAULT_BORDER_RADIUS, DEFAULT_BORDER_WIDTH, FALLBACK_COLOR, HEIGHT, RED, WHITE, WIDTH
 
 
