@@ -1,4 +1,3 @@
-from typing import Optional
 import numpy as np
 import pygame
 import pygame.gfxdraw as gfxdraw
@@ -25,10 +24,14 @@ class SineWave:
 
     def display(self, surface: pygame.Surface):
         self.surface.fill((0, 0, 0, 0))
+
         self.surface.blit(self.staticsurf, (0, 0))
 
         wave_x, wave_y = self.plot_points[self.slider.get_value()]
         gfxdraw.filled_circle(self.surface, int(wave_x), int(wave_y), DEFAULT_BORDER_RADIUS, FALLBACK_COLOR)
+        sliced_points = self.plot_points[0:self.get_current_angle()]
+        if len(sliced_points) > 2:
+            pygame.draw.polygon(self.surface, self.slider.default_color, self.plot_points[0:self.get_current_angle()], 5)
 
         surface.blit(self.surface, self.pos)
         self.slider.display(surface)
@@ -46,7 +49,6 @@ class SineWave:
     def prerenderWave(surface: pygame.Surface):
         w, h = surface.get_size()
         x = np.linspace(0, 4 * np.pi, 721, endpoint=True)
-        print(len(x))
         y = np.sin(x)
 
         pad_ratio = 0.85
@@ -69,6 +71,7 @@ class Slider:
     def __init__(self, pos: tuple[int, int], width: int, height: int, **kwargs):
         pointer_size = height // 3
 
+        self.font = pygame.font.SysFont(None, 24)
         self.default_color = kwargs.get("color", FALLBACK_COLOR)
         self.hover_color = RED
 
@@ -87,6 +90,7 @@ class Slider:
     def display(self, surface: pygame.Surface):
         pygame.draw.circle(surface, self.color, (self.slider_rect.centerx, self.rect.centery), self.slider_rect.height)
         pygame.draw.rect(surface, self.color, self.shallow_rect, self.border_width, self.border_radius)
+        self.render_angle(surface)
 
     def update(self):
         pressed = pygame.mouse.get_pressed()[0]
@@ -107,5 +111,10 @@ class Slider:
             self.color = self.default_color
 
     def get_value(self):
-        print(self.slider_rect.x-self.rect.left)
         return self.slider_rect.x - self.rect.left
+
+    def render_angle(self, surface: pygame.Surface):
+        value = self.get_value()
+        value_text = self.font.render(str(value), True, self.color)
+        value_rect = value_text.get_rect(center=(self.slider_rect.centerx, self.slider_rect.top - value_text.width*2))
+        surface.blit(value_text, value_rect)
