@@ -74,6 +74,7 @@ class Slider:
         self.font = pygame.font.SysFont(None, 24)
         self.default_color = kwargs.get("color", FALLBACK_COLOR)
         self.hover_color = RED
+        self.shadow_offset = 2
 
         self.rect = pygame.Rect(*pos, width, int(height * 0.5))
         self.rect.bottom = pos[1] - (pointer_size // 2)
@@ -88,7 +89,9 @@ class Slider:
         self.released = True
 
     def display(self, surface: pygame.Surface):
+        pygame.draw.circle(surface, (30, 30, 30), (self.slider_rect.centerx + self.shadow_offset, self.rect.centery + self.shadow_offset), self.slider_rect.height)
         pygame.draw.circle(surface, self.color, (self.slider_rect.centerx, self.rect.centery), self.slider_rect.height)
+        pygame.draw.circle(surface, (255, 255, 255), (self.slider_rect.centerx, self.rect.centery), self.slider_rect.height, 2)
         pygame.draw.rect(surface, self.color, self.shallow_rect, self.border_width, self.border_radius)
         self.render_angle(surface)
 
