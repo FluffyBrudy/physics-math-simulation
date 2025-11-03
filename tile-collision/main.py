@@ -2,6 +2,7 @@ import pygame
 import sys
 
 from player import Player
+from tilemap import Tilemap
 
 
 class Game:
@@ -15,8 +16,10 @@ class Game:
         self.running = True
         self.dt = 0
 
-        self.player = Player((100, 150))
+        self.player = Player(self, (100, 150))
         self.movement_x = [False, False]  # [left, right]
+
+        self.tilemap = Tilemap()
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -43,6 +46,7 @@ class Game:
 
     def render(self):
         self.screen.fill((0, 0, 0))
+        self.tilemap.render(self.screen)
         self.player.render(self.screen)
         pygame.display.flip()
 
