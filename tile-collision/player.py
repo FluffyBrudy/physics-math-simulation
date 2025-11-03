@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 TCollisionType = Dict[Literal["left", "right", "up", "down"], bool]
 
+CONTACT_TOLERANCE = 2
+
 
 class Player:
     def __init__(self, game: "Game", pos: Point) -> None:
@@ -30,6 +32,8 @@ class Player:
             "down": False,
         }
 
+        self.font = pygame.font.SysFont(None, 25)
+
     def rect(self):
         return pygame.Rect(*self.pos, *self.image.size)  # type: ignore
 
@@ -38,8 +42,7 @@ class Player:
             self.prev_movement_x = movement[0]
 
     def apply_gravity(self):
-        self.velocity.y = min(self.velocity.y + 0.1, 10)
-        print(self.velocity.y)
+        self.velocity.y = round(min(self.velocity.y + 0.1, 10), 2)
 
     def tile_collision_x(self, xdir: float):
         player_rect = self.rect()
@@ -55,14 +58,30 @@ class Player:
                     self.collisions["right"] = True
                 self.pos.x = player_rect.x
                 return True
+
+        if not self.collisions["left"]:
+            for tx, ty in self.game.tilemap.tiles:
+                tile_rect = Rect(tx * 32, ty * 32, 32, 32)
+                if 0 <= player_rect.left - tile_rect.right <= CONTACT_TOLERANCE:
+                    self.collisions["left"] = True
+                    break
+        if not self.collisions["right"]:
+            for tx, ty in self.game.tilemap.tiles:
+                tile_rect = Rect(tx * 32, ty * 32, 32, 32)
+                if 0 <= tile_rect.left - player_rect.right <= CONTACT_TOLERANCE:
+                    self.collisions["right"] = True
+                    break
+
         return False
 
     def tile_collision_y(self, ydir: float):
         player_rect = self.rect()
+        collided = False
+
         for tx, ty in self.game.tilemap.tiles:
-            x, y = tx * 32, ty * 32
-            tile_rect = Rect(x, y, 32, 32)
+            tile_rect = Rect(tx * 32, ty * 32, 32, 32)
             if player_rect.colliderect(tile_rect):
+                collided = True
                 if ydir < 0:
                     self.collisions["up"] = True
                     player_rect.top = tile_rect.bottom
@@ -70,8 +89,16 @@ class Player:
                     self.collisions["down"] = True
                     player_rect.bottom = tile_rect.top
                 self.pos.y = player_rect.y
-                return True
-        return False
+                break
+
+        if not self.collisions["down"]:
+            for tx, ty in self.game.tilemap.tiles:
+                tile_rect = Rect(tx * 32, ty * 32, 32, 32)
+                if 0 <= tile_rect.top - player_rect.bottom <= CONTACT_TOLERANCE:
+                    self.collisions["down"] = True
+                    break
+
+        return collided
 
     def jump(self):
         self.velocity.y = -3
@@ -94,4 +121,6 @@ class Player:
             self.velocity.y = 0
 
     def render(self, surface: Surface):
+        text = self.font.render(f"{self.collisions}", True, (255, 255, 255))
         surface.blit(self.image, self.pos)
+        surface.blit(text, (0, 600))

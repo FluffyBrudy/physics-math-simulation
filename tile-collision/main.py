@@ -30,8 +30,6 @@ class Game:
                     self.movement_x[0] = True
                 elif event.key == pygame.K_RIGHT:
                     self.movement_x[1] = True
-                if event.key == pygame.K_UP:
-                    pass  # jump later
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     self.movement_x[0] = False
