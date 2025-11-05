@@ -122,29 +122,23 @@ class Player:
     def dash(self):
         side_colliding = self.collisions["left"] or self.collisions["right"]
         if not self.dashing and not side_colliding:
-            direction = -1 if self.flipped else 1
-            self.dashing = 50 * direction
+            self.dashing = 10
 
     def handle_dash(self):
         if self.dashing:
-            if abs(self.dashing) < 50:
-                self.dashing *= 0.1
-            elif abs(self.dashing) >= 50:
-                self.velocity.x = (-1 if self.flipped else 1) * 12
-
-            if abs(self.dashing) < 1:
+            if abs(self.dashing) < 5:
                 self.dashing = 0
+                self.velocity.x = 0
+            elif abs(self.dashing) >= 5:
+                flip_dir = -1 if self.flipped else 1
+                self.velocity.x = flip_dir * 10
+                self.dashing -= 1
 
     def apply_friction(self):
         if self.velocity.x < 0:
             self.velocity.x = min(0, self.velocity.x + 1)
         elif self.velocity.x > 0:
             self.velocity.x = max(0, self.velocity.x - 1)
-
-        if self.dashing < 0:
-            self.dashing = min(0, self.dashing + 1)
-        elif self.velocity.x > 0:
-            self.dashing = max(0, self.dashing - 1)
 
         if self.collisions["left"] or self.collisions["right"]:
             self.dashing = 0
@@ -171,7 +165,7 @@ class Player:
 
     def render(self, surface: Surface):
         text = self.font.render(
-            f"{(round(self.velocity.x,2), self.dashing, self.collisions)}",
+            f"{self.dashing}",
             True,
             (255, 255, 255),
         )
