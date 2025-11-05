@@ -37,6 +37,9 @@ class Game:
                     self.movement_x[1] = False
                 if event.key == pygame.K_UP:
                     self.player.jump()
+                if event.key == pygame.K_SPACE:
+                    print(0)
+                    self.player.dash()
 
     def update(self, dt):
         movement_x = (self.movement_x[1] - self.movement_x[0], 0)

@@ -13,13 +13,13 @@ class Tilemap:
         pygame.draw.rect(wall_surf, (100, 100, 100, 255), (0, 0, 32, 32))
         pygame.draw.rect(wall_surf, (50, 50, 50, 255), (0, 0, 32, 32), 2)
 
-        for x in range(0, 12):
+        for x in range(0, 30):
             self.tiles[(x, 0)] = wall_surf.copy()
-            self.tiles[(x, 12)] = wall_surf.copy()
+            self.tiles[(x, 20)] = wall_surf.copy()
 
-        for y in range(1, 12):
+        for y in range(1, 30):
             self.tiles[(0, y)] = wall_surf.copy()
-            self.tiles[(11, y)] = wall_surf.copy()
+            self.tiles[(19, y)] = wall_surf.copy()
 
         for x in range(4, 8):
             for y in range(5, 7):
