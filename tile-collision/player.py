@@ -49,6 +49,9 @@ class Player:
     def rect(self):
         return Rect(self.pos, self.image.size).inflate(-10, -10)
 
+    def collision_on_anyside(self, *sides: TCollisionTypeKeys):
+        return any(self.collisions[side] for side in sides)
+
     def handle_flip(self, movement: Point):
         if movement[0] and movement[0] != self.prev_movement_x:
             self.prev_movement_x = movement[0]
@@ -120,29 +123,29 @@ class Player:
         self.velocity.y = -3
 
     def dash(self):
-        side_colliding = self.collisions["left"] or self.collisions["right"]
+        side_colliding = (self.collisions["left"] and self.flipped) or (
+            self.collisions["right"] and not self.flipped
+        )
         if not self.dashing and not side_colliding:
-            self.dashing = 10
+            self.dashing = 1
 
     def handle_dash(self):
         if self.dashing:
-            if abs(self.dashing) < 5:
-                self.dashing = 0
-                self.velocity.x = 0
-            elif abs(self.dashing) >= 5:
+            if self.dashing < 0.4:
+                if self.collision_on_anyside("left", "right"):
+                    self.velocity.x *= -1
+                self.dashing = max(self.dashing - 0.1, 0)
+
+            elif self.dashing >= 0.4:
                 flip_dir = -1 if self.flipped else 1
-                self.velocity.x = flip_dir * 10
-                self.dashing -= 1
+                self.velocity.x = flip_dir * 4
+                self.dashing -= 0.1
 
     def apply_friction(self):
         if self.velocity.x < 0:
-            self.velocity.x = min(0, self.velocity.x + 1)
+            self.velocity.x = min(0, self.velocity.x + 0.1)
         elif self.velocity.x > 0:
-            self.velocity.x = max(0, self.velocity.x - 1)
-
-        if self.collisions["left"] or self.collisions["right"]:
-            self.dashing = 0
-            self.velocity.x = 0
+            self.velocity.x = max(0, self.velocity.x - 0.1)
 
     def update(self, dt: float, movement=(0, 0)):
         self.collisions = {"left": False, "right": False, "up": False, "down": False}
@@ -151,12 +154,10 @@ class Player:
         movement_y = self.speed * dt * (self.velocity.y + movement[1])
 
         self.pos.x += movement_x
-        if self.tile_collision_x(movement_x):
-            self.velocity.x = 0
+        self.tile_collision_x(movement_x)
 
         self.pos.y += movement_y
-        if self.tile_collision_y(movement_y):
-            self.velocity.y = 0
+        self.tile_collision_y(movement_y)
 
         self.apply_gravity()
         self.handle_flip(movement)
