@@ -127,19 +127,21 @@ class Player:
             self.collisions["right"] and not self.flipped
         )
         if not self.dashing and not side_colliding:
-            self.dashing = 1
+            self.dashing = 0.3
+            flip_dir = -1 if self.flipped else 1
+            self.velocity.x = flip_dir * 12
+            self.velocity.y *= 0.5
 
-    def handle_dash(self):
-        if self.dashing:
-            if self.dashing < 0.4:
-                if self.collision_on_anyside("left", "right"):
-                    self.velocity.x *= -1
-                self.dashing = max(self.dashing - 0.1, 0)
-
-            elif self.dashing >= 0.4:
-                flip_dir = -1 if self.flipped else 1
-                self.velocity.x = flip_dir * 4
-                self.dashing -= 0.1
+    def handle_dash(self, dt: float):
+        if self.dashing > 0:
+            self.dashing -= dt
+            if self.collision_on_anyside("left", "right"):
+                self.velocity.x *= -0.3
+                self.dashing = 0
+            else:
+                self.velocity.x *= 0.92
+        else:
+            self.dashing = 0
 
     def apply_friction(self):
         if self.velocity.x < 0:
@@ -161,7 +163,7 @@ class Player:
 
         self.apply_gravity()
         self.handle_flip(movement)
-        self.handle_dash()
+        self.handle_dash(dt)
         self.apply_friction()
 
     def render(self, surface: Surface):
